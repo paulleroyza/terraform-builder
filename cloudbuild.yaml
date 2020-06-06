@@ -1,0 +1,17 @@
+steps:
+- id: 'Get Latest TF Version'
+  name: 'gcr.io/cloud-builders/gcloud'
+  entrypoint: bash
+  args: 
+  - '-c'
+  - |
+    curl --silent https://www.terraform.io/downloads.html | sed -n 's/.*\s\(0\.[0-9]\{1,2\}\.[0-9]\{1,2\}\).*/\1/p' > /workspace/tf_ver.txt &&
+    echo New $(cat tf_ver.txt) &&
+    gcloud container images list-tags gcr.io/$PROJECT_ID/terraform --format="value(TAGS)" | sed -n 's/\(0\.[0-9]\{1,2\}\.[0-9]\{1,2\}\),latest.*/\1/p' > /workspace/cur_ver.txt && 
+    echo Current $(cat cur_ver.txt) &&
+    if [ "$(cat /workspace/cur_ver.txt)" != "$(cat /workspace/tf_ver.txt)" ]
+    then
+      git clone https://github.com/GoogleCloudPlatform/cloud-builders-community.git builders
+      cd builders/terraform
+      gcloud builds submit --config=cloudbuild.yaml --substitutions=_TERRAFORM_VERSION="$(cat /workspace/tf_ver.txt)",_TERRAFORM_VERSION_SHA256SUM="$(curl "https://releases.hashicorp.com/terraform/$(cat /workspace/tf_ver.txt)/terraform_$(cat /workspace/tf_ver.txt)_SHA256SUMS" | grep amd64 | grep linux | awk '{ print $1 }')"
+    fi
