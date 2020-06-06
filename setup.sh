@@ -30,3 +30,6 @@ gcloud functions deploy terraform-builder \
 --memory=128MB --update-labels=terraform-builder=cloudfunction --entry-point=trigger_build \
 --runtime=python37 --service-account=terraform-builder@$PROJECT_ID.iam.gserviceaccount.com \
 --timeout=300
+
+# create cron schedule
+gcloud scheduler jobs create pubsub terrafrom-builder-cron --schedule="57 3 * * *" --topic=terraform-build-topic --message-body="gobuild"
