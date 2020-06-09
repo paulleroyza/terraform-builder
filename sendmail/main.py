@@ -10,7 +10,10 @@ def sendmail(event, context):
     if 'data' in event:
         build = json.loads(str(base64.b64decode(event['data']).decode('utf-8')))
         print(build)
-        project_id = os.environ['PROJECT_ID']
+        try:
+            project_id = os.environ['PROJECT_ID']
+        except:
+            raise SystemExit('PROJECT_ID environment variable not set.')
         sender=os.environ['SENDER']
         recipient=os.environ['RECIPIENT']
         if 'digest' in build.keys():
@@ -35,3 +38,8 @@ def sendmail(event, context):
             print(response.headers)
         except Exception as e:
             print(e.message)
+    else:
+        raise SystemExit('data key not present in JSON')
+
+if __name__ == "__main__":
+    sendmail(None,None)

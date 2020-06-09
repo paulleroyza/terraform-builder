@@ -48,7 +48,7 @@ RECIPIENT=info@example.com
 
 gcloud functions deploy build-notifications \
 --source https://source.developers.google.com/projects/$PROJECT_ID/repos/terraform-builder/moveable-aliases/master/paths/sendmail \
---trigger-topic=gcr --max-instances=1 --set-env-vars=SENDGRID_API_KEY=$SENDGRID_APIKEY,PROJECT_ID=$PROJECT_ID,SENDER=$SENDER,RECIPIENT=$RECIPIENT \
+--trigger-topic=gcr --max-instances=1 --set-env-vars=SENDGRID_API_KEY=$SENDGRID_API_KEY,PROJECT_ID=$PROJECT_ID,SENDER=$SENDER,RECIPIENT=$RECIPIENT \
 --memory=128MB --update-labels=terraform-builder=sendmail --entry-point=sendmail \
 --runtime=python37 --service-account=terraform-builder@$PROJECT_ID.iam.gserviceaccount.com \
 --timeout=300
