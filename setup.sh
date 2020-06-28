@@ -1,6 +1,12 @@
 #setup file for the pipeline, run in cloud shell with your target project set
 PROJECT_ID=$DEVSHELL_PROJECT_ID
 
+#enable APIs
+gcloud services enable sourcerepo.googleapis.com
+gcloud services enable cloudbuild.googleapis.com
+gcloud services enable cloudfunctions.googleapis.com
+gcloud app create --region=us-central
+
 #create the source repo to slave off the github repo
 gcloud source repos create terraform-builder
 git config --global credential.https://source.developers.google.com.helper gcloud.sh
@@ -24,6 +30,8 @@ gcloud projects add-iam-policy-binding $PROJECT_ID \
   --role roles/cloudbuild.builds.editor
 
 #create cloud function 
+echo Select no to "allow unauthenticated"
+
 gcloud functions deploy terraform-builder \
 --source https://source.developers.google.com/projects/$PROJECT_ID/repos/terraform-builder/moveable-aliases/master/paths/cloud-function \
 --trigger-topic=terraform-build-topic --max-instances=1 --set-env-vars=PROJECT_ID=$PROJECT_ID \
