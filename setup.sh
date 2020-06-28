@@ -1,18 +1,10 @@
 #setup file for the pipeline, run in cloud shell with your target project set
 PROJECT_ID=$DEVSHELL_PROJECT_ID
 
-#enable APIs
-gcloud services enable sourcerepo.googleapis.com
-gcloud services enable cloudbuild.googleapis.com
-gcloud services enable cloudfunctions.googleapis.com
-gcloud services enable 
-
 #create the source repo to slave off the github repo
 gcloud source repos create terraform-builder
 git config --global credential.https://source.developers.google.com.helper gcloud.sh
 git remote add google https://source.developers.google.com/p/$PROJECT_ID/r/terraform-builder
-# might need to use this:
-#git remote add ssh://user@domain@source.developers.google.com:2022/p/$PROJECT_ID/r/terraform-builder
 git push --all google
 
 #create the build trigger in cloud build
@@ -32,13 +24,31 @@ gcloud projects add-iam-policy-binding $PROJECT_ID \
   --role roles/cloudbuild.builds.editor
 
 #create cloud function 
-echo Select no to "allow unauthenticated"
 gcloud functions deploy terraform-builder \
 --source https://source.developers.google.com/projects/$PROJECT_ID/repos/terraform-builder/moveable-aliases/master/paths/cloud-function \
 --trigger-topic=terraform-build-topic --max-instances=1 --set-env-vars=PROJECT_ID=$PROJECT_ID \
 --memory=128MB --update-labels=terraform-builder=cloudfunction --entry-point=trigger_build \
 --runtime=python37 --service-account=terraform-builder@$PROJECT_ID.iam.gserviceaccount.com \
---timeout=300 --allow-unauthenticated=FALSE
+--timeout=300
 
 # create cron schedule
 gcloud scheduler jobs create pubsub terrafrom-builder-cron --schedule="57 3 * * *" --topic=terraform-build-topic --message-body="gobuild"
+
+#set up alerting
+gcloud beta logging metrics create terraform-version-build --description="Metric on whether there is a new build" \
+	--log-filter="resource.type=\"build\" AND textPayload=~\"Building New Version: \d\.\d*\.\d*\""
+
+#set up build notification, set up the topic, this should exist if container registry has ever been used
+gcloud pubsub topics create gcr || true #might exist already on the project
+
+#set sendgrid API key here and no, you can't have mine
+SENDGRID_API_KEY=$(cat ../sendgrid_apikey.txt)
+SENDER=info@example.com
+RECIPIENT=info@example.com
+
+gcloud functions deploy build-notifications \
+--source https://source.developers.google.com/projects/$PROJECT_ID/repos/terraform-builder/moveable-aliases/master/paths/sendmail \
+--trigger-topic=gcr --max-instances=1 --set-env-vars=SENDGRID_API_KEY=$SENDGRID_API_KEY,PROJECT_ID=$PROJECT_ID,SENDER=$SENDER,RECIPIENT=$RECIPIENT \
+--memory=128MB --update-labels=terraform-builder=sendmail --entry-point=sendmail \
+--runtime=python37 --service-account=terraform-builder@$PROJECT_ID.iam.gserviceaccount.com \
+--timeout=300

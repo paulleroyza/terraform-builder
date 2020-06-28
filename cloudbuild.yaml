@@ -11,6 +11,7 @@ steps:
     echo Current $(cat cur_ver.txt) &&
     if [ "$(cat /workspace/cur_ver.txt)" != "$(cat /workspace/tf_ver.txt)" ]
     then
+      echo "Building New Version:" $(cat tf_ver.txt)
       git clone https://github.com/GoogleCloudPlatform/cloud-builders-community.git builders
       cd builders/terraform
       gcloud builds submit --config=cloudbuild.yaml --substitutions=_TERRAFORM_VERSION="$(cat /workspace/tf_ver.txt)",_TERRAFORM_VERSION_SHA256SUM="$(curl "https://releases.hashicorp.com/terraform/$(cat /workspace/tf_ver.txt)/terraform_$(cat /workspace/tf_ver.txt)_SHA256SUMS" | grep amd64 | grep linux | awk '{ print $1 }')"
