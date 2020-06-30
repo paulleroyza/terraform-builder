@@ -8,6 +8,7 @@ PROJECT_ID=$DEVSHELL_PROJECT_ID
 gcloud services enable sourcerepo.googleapis.com
 gcloud services enable cloudbuild.googleapis.com
 gcloud services enable cloudfunctions.googleapis.com
+gcloud services enable cloudscheduler.googleapis.com
 gcloud app create --region=us-central
 
 #create the source repo to slave off the github repo
