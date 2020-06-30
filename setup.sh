@@ -1,4 +1,7 @@
 #setup file for the pipeline, run in cloud shell with your target project set
+#git clone https://github.com/paulleroyza/terraform-builder.git
+#cd terraform-builder
+
 PROJECT_ID=$DEVSHELL_PROJECT_ID
 
 #enable APIs
