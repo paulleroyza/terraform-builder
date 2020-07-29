@@ -34,14 +34,13 @@ gcloud projects add-iam-policy-binding $PROJECT_ID \
   --role roles/cloudbuild.builds.editor
 
 #create cloud function 
-echo Select no to "allow unauthenticated"
 
 gcloud functions deploy terraform-builder \
 --source https://source.developers.google.com/projects/$PROJECT_ID/repos/terraform-builder/moveable-aliases/master/paths/cloud-function \
 --trigger-topic=terraform-build-topic --max-instances=1 --set-env-vars=PROJECT_ID=$PROJECT_ID \
 --memory=128MB --update-labels=terraform-builder=cloudfunction --entry-point=trigger_build \
 --runtime=python37 --service-account=terraform-builder@$PROJECT_ID.iam.gserviceaccount.com \
---timeout=300
+--timeout=300 --quiet
 
 # create cron schedule
 gcloud scheduler jobs create pubsub terrafrom-builder-cron --schedule="57 3 * * *" --topic=terraform-build-topic --message-body="gobuild"
@@ -63,4 +62,4 @@ gcloud functions deploy build-notifications \
 --trigger-topic=gcr --max-instances=1 --set-env-vars=SENDGRID_API_KEY=$SENDGRID_API_KEY,PROJECT_ID=$PROJECT_ID,SENDER=$SENDER,RECIPIENT=$RECIPIENT \
 --memory=128MB --update-labels=terraform-builder=sendmail --entry-point=sendmail \
 --runtime=python37 --service-account=terraform-builder@$PROJECT_ID.iam.gserviceaccount.com \
---timeout=300
+--timeout=300 --quiet
