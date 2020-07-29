@@ -14,3 +14,5 @@ def trigger_build(data, context):
     except Exception as err:
         traceback.print_tb(err.__traceback__)
         
+if __name__=="__main__":
+    trigger_build(data=None,context=None)
