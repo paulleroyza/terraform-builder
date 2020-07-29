@@ -1,1 +1,1 @@
-google-cloud-build==1.0.0
+google-cloud-build==2.0.0
