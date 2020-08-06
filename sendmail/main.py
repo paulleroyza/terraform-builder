@@ -4,6 +4,21 @@ import os
 import json
 import base64
 
+def get_secret_version(project_id, secret_id):
+    # Import the Secret Manager client library.
+    from google.cloud import secretmanager
+
+    # Create the Secret Manager client.
+    client = secretmanager.SecretManagerServiceClient()
+
+    # Build the resource name of the secret.
+    name = client.secret_version_path(project_id, secret_id, "latest")
+
+    # Get the secret.
+    response = client.access_secret_version(name)
+
+    return response.payload.data.decode('UTF-8')
+
 def sendmail(event, context):
     print("Received pubsub message")
     print(event)
@@ -31,7 +46,7 @@ def sendmail(event, context):
             subject='{} Container Registry Change'.format(project_id),
             html_content='{} Container Registry has had a container update: {} {} {}'.format(project_id,build['action'],tag,digest) )
         try:
-            sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
+            sg = SendGridAPIClient(os.environ.get(get_secret_version(project_id, "sendgridapikey")))
             response = sg.send(message)
             print(response.status_code)
             print(response.body)
