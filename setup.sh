@@ -1,8 +1,8 @@
 #setup file for the pipeline, run in cloud shell with your target project set
-#git clone https://github.com/paulleroyza/terraform-builder.git
-#cd terraform-builder
 
-PROJECT_ID=$DEVSHELL_PROJECT_ID
+# git clone https://github.com/paulleroyza/terraform-builder.git
+# cd terraform-builder
+# $DEVSHELL_PROJECT_ID=<if you are not in cloud shell>
 
 #enable APIs
 gcloud services enable sourcerepo.googleapis.com
@@ -15,7 +15,7 @@ gcloud app create --region=us-central
 #create the source repo to slave off the github repo
 gcloud source repos create terraform-builder
 git config --global credential.https://source.developers.google.com.helper gcloud.sh
-git remote add google https://source.developers.google.com/p/$PROJECT_ID/r/terraform-builder
+git remote add google https://source.developers.google.com/p/$DEVSHELL_PROJECT_ID/r/terraform-builder
 git push google main
 
 #create the build trigger in cloud build
@@ -35,17 +35,17 @@ gcloud pubsub topics create terraform-build-topic
 gcloud iam service-accounts create terraform-builder --description="Cloud Function's Service Account to trigger build" --display-name="Terraform Builder"
 
 #give Service account required perms
-gcloud projects add-iam-policy-binding $PROJECT_ID \
-  --member serviceAccount:terraform-builder@$PROJECT_ID.iam.gserviceaccount.com \
+gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID \
+  --member serviceAccount:terraform-builder@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com \
   --role roles/cloudbuild.builds.editor
 
 #create cloud function 
 
 gcloud functions deploy terraform-builder \
---source https://source.developers.google.com/projects/$PROJECT_ID/repos/terraform-builder/moveable-aliases/main/paths/cloud-function \
+--source https://source.developers.google.com/projects/$DEVSHELL_PROJECT_ID/repos/terraform-builder/moveable-aliases/main/paths/cloud-function \
 --trigger-topic=terraform-build-topic --max-instances=1 \
 --memory=128MB --update-labels=terraform-builder=cloudfunction --entry-point=trigger_build \
---runtime=python37 --service-account=terraform-builder@$PROJECT_ID.iam.gserviceaccount.com \
+--runtime=python37 --service-account=terraform-builder@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com \
 --timeout=300 --quiet
 
 # create cron schedule
@@ -67,7 +67,7 @@ gcloud secrets create sendgridapikey \
 	--labels=terraform-builder=secrets
 
 gcloud secrets add-iam-policy-binding sendgridapikey \
-	--member serviceAccount:terraform-build-notifier@$PROJECT_ID.iam.gserviceaccount.com \
+	--member serviceAccount:terraform-build-notifier@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com \
 	--role="roles/secretmanager.secretAccessor"
 
 #set sendgrid API key here and no, you can't have mine
@@ -78,8 +78,8 @@ SENDER=info@example.com
 RECIPIENT=info@example.com
 
 gcloud functions deploy build-notifications \
---source https://source.developers.google.com/projects/$PROJECT_ID/repos/terraform-builder/moveable-aliases/main/paths/sendmail \
+--source https://source.developers.google.com/projects/$DEVSHELL_PROJECT_ID/repos/terraform-builder/moveable-aliases/main/paths/sendmail \
 --trigger-topic=gcr --max-instances=1 --set-env-vars=SENDER=$SENDER,RECIPIENT=$RECIPIENT \
 --memory=128MB --update-labels=terraform-builder=sendmail --entry-point=sendmail \
---runtime=python37 --service-account=terraform-build-notifier@$PROJECT_ID.iam.gserviceaccount.com \
+--runtime=python37 --service-account=terraform-build-notifier@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com \
 --timeout=300 --quiet
