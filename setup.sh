@@ -59,7 +59,7 @@ gcloud beta logging metrics create terraform-version-build --description="Metric
 gcloud pubsub topics create gcr || true #might exist already on the project
 
 #split out notifier
-gcloud iam service-accounts create terraform-build-notifier --description="Cloud Function's Service Account to trigger build" --display-name="Terraform Builder"
+gcloud iam service-accounts create terraform-build-notifier --description="Cloud Function's Service Account for build noficiations" --display-name="Terraform Builder Notifier"
 
 #set up secrets store
 gcloud secrets create sendgridapikey \
