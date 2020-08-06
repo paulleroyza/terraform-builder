@@ -4,6 +4,10 @@
 # cd terraform-builder
 # $DEVSHELL_PROJECT_ID=<if you are not in cloud shell>
 
+#set email details
+SENDER=info@example.com
+RECIPIENT=info@example.com
+
 #enable APIs
 gcloud services enable sourcerepo.googleapis.com
 gcloud services enable cloudbuild.googleapis.com
@@ -72,10 +76,6 @@ gcloud secrets add-iam-policy-binding sendgridapikey \
 
 #set sendgrid API key here and no, you can't have mine
 gcloud secrets versions add sendgridapikey --data-file="../sendgrid_apikey.txt"
-
-#set email details
-SENDER=info@example.com
-RECIPIENT=info@example.com
 
 gcloud functions deploy build-notifications \
 --source https://source.developers.google.com/projects/$DEVSHELL_PROJECT_ID/repos/terraform-builder/moveable-aliases/main/paths/sendmail \
