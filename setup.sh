@@ -9,6 +9,7 @@ gcloud services enable sourcerepo.googleapis.com
 gcloud services enable cloudbuild.googleapis.com
 gcloud services enable cloudfunctions.googleapis.com
 gcloud services enable cloudscheduler.googleapis.com
+gcloud services enable secretmanager.googleapis.com
 gcloud app create --region=us-central
 
 #create the source repo to slave off the github repo
@@ -42,7 +43,7 @@ gcloud projects add-iam-policy-binding $PROJECT_ID \
 
 gcloud functions deploy terraform-builder \
 --source https://source.developers.google.com/projects/$PROJECT_ID/repos/terraform-builder/moveable-aliases/main/paths/cloud-function \
---trigger-topic=terraform-build-topic --max-instances=1 --set-env-vars=PROJECT_ID=$PROJECT_ID \
+--trigger-topic=terraform-build-topic --max-instances=1 \
 --memory=128MB --update-labels=terraform-builder=cloudfunction --entry-point=trigger_build \
 --runtime=python37 --service-account=terraform-builder@$PROJECT_ID.iam.gserviceaccount.com \
 --timeout=300 --quiet
@@ -78,7 +79,7 @@ RECIPIENT=info@example.com
 
 gcloud functions deploy build-notifications \
 --source https://source.developers.google.com/projects/$PROJECT_ID/repos/terraform-builder/moveable-aliases/main/paths/sendmail \
---trigger-topic=gcr --max-instances=1 --set-env-vars=PROJECT_ID=$PROJECT_ID,SENDER=$SENDER,RECIPIENT=$RECIPIENT \
+--trigger-topic=gcr --max-instances=1 --set-env-vars=SENDER=$SENDER,RECIPIENT=$RECIPIENT \
 --memory=128MB --update-labels=terraform-builder=sendmail --entry-point=sendmail \
 --runtime=python37 --service-account=terraform-build-notifier@$PROJECT_ID.iam.gserviceaccount.com \
 --timeout=300 --quiet
