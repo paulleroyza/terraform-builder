@@ -37,21 +37,19 @@ def sendmail(event, context):
             digest=""
         if 'tag' in build.keys():
             tag=build['tag']
-        else:
-            tag=""
-        message = Mail(
-            from_email=sender,
-            to_emails=recipient,
-            subject='{} Container Registry Change'.format(project_id),
-            html_content='{} Container Registry has had a container update: {} {} {}'.format(project_id,build['action'],tag,digest) )
-        try:
-            sg = SendGridAPIClient(get_secret_version(project_id, "sendgridapikey"))
-            response = sg.send(message)
-            print(response.status_code)
-            print(response.body)
-            print(response.headers)
-        except Exception as e:
-            print(e.message)
+            message = Mail(
+                from_email=sender,
+                to_emails=recipient,
+                subject='{} Container Registry Change {}'.format(project_id,tag),
+                html_content='{} Container Registry has had a container update: {} {} {}'.format(project_id,build['action'],tag,digest) )
+            try:
+                sg = SendGridAPIClient(get_secret_version(project_id, "sendgridapikey"))
+                response = sg.send(message)
+                print(response.status_code)
+                print(response.body)
+                print(response.headers)
+            except Exception as e:
+                print(e.message)
     else:
         raise SystemExit('data key not present in JSON')
 
